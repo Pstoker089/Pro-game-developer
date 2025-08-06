@@ -31,7 +31,8 @@ matches={
     "ludo":"ludo"
 }
 
-
+usedmatch=[]
+score=0
 
 for name,pos in gamepos.items():
     screen.blit(images[name],(pos.x,pos.y))
@@ -49,6 +50,29 @@ while True:
         if event.type==pygame.QUIT:
             exit()
         if event.type==pygame.MOUSEBUTTONDOWN:
-            pass
-        
+            spos=pygame.mouse.get_pos()
+        elif event.type==pygame.MOUSEBUTTONUP:
+            epos=pygame.mouse.get_pos()
+            slabel=None
+            elabel=None
+            for label,rect in gamepos.items():
+                if rect.collidepoint(spos):
+                    slabel=label
+                    break
+            for label,rect in textpos.items():
+                if rect.collidepoint(epos):
+                    elabel=label
+                    break
+            if slabel and elabel:
+                pygame.draw.line(screen,"black",spos,epos,5)
+                if matches[slabel]==elabel and (slabel,elabel) not in usedmatch:
+                    score+=1
+                    usedmatch.append((slabel,elabel))
+                    print(f"correct match! \n the score is {score}")
+                else:
+                    print("Wrong match!")
+                    
+                    
+            
+
     pygame.display.update()
