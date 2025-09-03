@@ -10,8 +10,11 @@ yellowrect=pygame.Rect(700,300,50,50)
 redrect=pygame.Rect(100,300,50,50)
 border=pygame.Rect(390,0,20,600)
 font=pygame.font.SysFont("Times New roman",50)
+winner=""
+over=False
 
 def draw():
+    global win
     screen.blit(space,(0,0))
     pygame.draw.rect(screen,"black",border)
     screen.blit(yellowship,(yellowrect.x,yellowrect.y))
@@ -24,6 +27,26 @@ def draw():
         pygame.draw.rect(screen,"yellow",i)
     for i in redbullets:
         pygame.draw.rect(screen,"red",i)
+    if over:
+        win=font.render(f"{winner} WINS",True,"white")
+        screen.blit(win,(350,250))
+
+
+
+
+def gameover():
+    global yhealth
+    global rhealth
+    global winner
+    global over
+    if yhealth<=0 and not rhealth<=0:
+        over=True
+        winner="RED"
+    elif rhealth<=0 and not yhealth<=0:
+        over=True
+        winner="YELLOW"
+    
+
 
 def ymovement(keys):
     if keys[pygame.K_UP] and yellowrect.y>0:
@@ -64,7 +87,8 @@ def bulletmove(yelbullets,redbullets):
         elif i.x>800:
             redbullets.remove(i)
     
-    
+
+            
 
 
 
@@ -87,10 +111,14 @@ while True:
                 bullet=pygame.Rect(redrect.x+25,redrect.y+25,10,5)
                 redbullets.append(bullet)
     keys=pygame.key.get_pressed()
-    ymovement(keys)
-    rmovement(keys)
+    
+    if not over:
+        ymovement(keys)
+        rmovement(keys)
+        bulletmove(yelbullets,redbullets)
+    gameover()
     draw()
-    bulletmove(yelbullets,redbullets)
+
 
 
     pygame.display.update()
