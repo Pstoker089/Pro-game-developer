@@ -2,9 +2,12 @@ import pygame,random
 pygame.init()
 screen=pygame.display.set_mode((864,750))
 pygame.display.set_caption("Flappy bird")
+screenx=864
+screeny=750
 
 bg=pygame.image.load("birdbg.png")
 ground=pygame.image.load("ground.png")
+button=pygame.image.load("restartbutton.png")
 
 
 clock=pygame.time.Clock()
@@ -57,17 +60,43 @@ class pipe(pygame.sprite.Sprite):
         if self.rect.right<0:
             self.kill()
 
-class gameender():
-    pass
+class restart(pygame.sprite.Sprite):
+    def __init__(self,x,y,image):
+        self.x=x
+        self.y=y
+        self.image=image
+        self.rect=self.image.get_rect()
+        self.rect.topleft=(x,y)
+    def draw(self):
+        screen.blit(self.image,(self.rect.x, self.rect.y))
+        reset=False
+        pos=pygame.mouse.get_pos()
+        if self.rect.collidepoint(pos):
+            if pygame.mouse.get_pressed()[0] ==1:
+                reset=True
+                return reset
+
+        
+rb=restart((screenx//2),(screeny//2),button)
+
+#the class thats gonna do all the reset stuff
+def reset_game():
+    global gameover
+    global flappy
+    global flying
+    gameover=False
+    pipegroup.empty()
+    flappy.rect.x=50
+    flappy.rect.y=400
+    flying=False
+    score=0
+    return score
+
+
+
+
 
 pipegroup=pygame.sprite.Group()
-
-        
-        
-
-        
-
-        
 
 flappy=bird(50,400)
 birdgroup=pygame.sprite.Group()
@@ -98,9 +127,17 @@ while True:
             pipegroup.add(bottompipe)
             pipetime=nowtime
         pipegroup.update()
+    #if bird hits bottom of screen, game over
     if flappy.rect.bottom>=632:
         gameover=True
         flying=False
+    #if bird hits top of screen or a pipe, game over
+    if pygame.sprite.groupcollide(birdgroup,pipegroup,False,False) or flappy.rect.top < 0:
+        gameover=True
+    if gameover==True:
+        if rb.draw():
+            score=reset_game()
+        
     for event in pygame.event.get():
         if event.type==pygame.QUIT:
             exit()
