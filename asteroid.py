@@ -8,7 +8,7 @@ font=pygame.font.SysFont("Times New roman",25)
 
 bg=pygame.image.load("images/spacebg2.png")
 clock=pygame.time.Clock()
-
+score=0
 def background():
     screen.blit(bg,(0,0))
     playert.draw(screen)
@@ -16,6 +16,8 @@ def background():
         i.draw(screen)
     for i in astlist:
         i.draw(screen)
+    text=font.render(f"Score : {score}",True,"white")
+    screen.blit(text,(0,0))
     pygame.display.update()
 
 pship=pygame.image.load("images/playership.png")
@@ -27,6 +29,8 @@ ast15=pygame.image.load("images/asteroid 150.png")
 
 class player():
     def __init__(self):
+        global w
+        global h
         self.image=pship
         self.rect=self.image.get_rect()
         self.x=400
@@ -37,7 +41,9 @@ class player():
         self.rotaterect.center=(self.x,self.y)
         self.cosine=math.cos(math.radians(self.angle+90))
         self.sine=math.sin(math.radians(self.angle+90))
-        self.head=(self.x+self.cosine*self.x//2, self.y-self.sine*self.y//2)
+        w=self.image.get_width()
+        h=self.image.get_height()
+        self.head = (self.x + self.cosine * (w // 2), self.y - self.sine * (h // 2))        
 
     def draw(self,screen):
         screen.blit(self.rotate,self.rotaterect)
@@ -49,8 +55,7 @@ class player():
         self.rotaterect.center=(self.x,self.y)
         self.cosine=math.cos(math.radians(self.angle+90))
         self.sine=math.sin(math.radians(self.angle+90))
-        self.head=(self.x+self.cosine*self.x//2, self.y-self.sine*self.y//2)
-
+        self.head = (self.x + self.cosine * (w // 2), self.y - self.sine * (h // 2))
     def right(self):
         self.angle-=5
         self.rotate=pygame.transform.rotate(self.image,self.angle)
@@ -58,8 +63,7 @@ class player():
         self.rotaterect.center=(self.x,self.y)
         self.cosine=math.cos(math.radians(self.angle+90))
         self.sine=math.sin(math.radians(self.angle+90))
-        self.head=(self.x+self.cosine*self.x//2, self.y-self.sine*self.y//2)
-    
+        self.head = (self.x + self.cosine * (w // 2), self.y - self.sine * (h // 2))    
     def forward(self):
         self.x+=self.cosine*6
         self.y-=self.sine*6
@@ -68,7 +72,9 @@ class player():
         self.rotaterect.center=(self.x,self.y)
         self.cosine=math.cos(math.radians(self.angle+90))
         self.sine=math.sin(math.radians(self.angle+90))
-        self.head=(self.x+self.cosine*self.x//2, self.y-self.sine*self.y//2)
+        self.head = (self.x + self.cosine * (w // 2), self.y - self.sine * (h // 2))
+
+
 
 class bullet():
     def __init__(self):
@@ -78,15 +84,15 @@ class bullet():
         self.h=7.5
         self.sine=playert.sine
         self.cosine=playert.cosine
-        self.xv=self.cosine*10
-        self.yv=self.sine*10
+        self.xv = self.cosine*5
+        self.yv = -self.sine*5
 
     def move(self):
         self.x+=self.xv
         self.y+=self.yv
 
     def draw(self,screen):
-        pygame.draw.rect(screen,"white",[self.x,self.y,self.w,self.h])
+        pygame.draw.rect(screen,"red",[self.x,self.y,self.w,self.h])
 
 class asteroids():
     def __init__(self,type):
@@ -97,7 +103,7 @@ class asteroids():
             self.image=ast10
         elif self.type==3:
             self.image=ast15
-        self.rect=self.image.get_rect()
+        #self.rect=self.image.get_rect()
         #self.x=random.randint(0,screenx)
         #self.y=random.randint(0,screeny)
         self.s=50*type
@@ -115,40 +121,60 @@ class asteroids():
         self.yv=self.ydir*random.randint(1,3)
 
     def draw(self,screen):
-        screen.blit(self.image,self.rect)
+        screen.blit(self.image,(self.x,self.y))
+
 
     def collide(self):
         if self.rect.colliderect(bullet):
-            self.x, self.y= random.randint(0,screenx)
+            self.x=random.randint(0,screenx)
+            self.y=random.randint(0,screeny)
+        elif self.rect.colliderect(playert):
+            pass
 
 
 playert=player()
 bulletlist=[]
 astlist=[]
 
+
+currenttime=0
+
 while True:
     #essentials
     clock.tick(60)
     background()
+    currenttime+=1
 
-    #asteroid creation
-    asttype=random.randint(1,3)
-    astlist.append(asteroids(asttype))
+        #asteroid essentials
+    if currenttime>=90:
+        asttypelist=[1,2,3]
+        asttype=random.choice(asttypelist)
+        astlist.append(asteroids(asttype))
+        currenttime=0
     
     for i in astlist:
         i.x+=i.xv
         i.y+=i.yv
-        
+
+    for b in bulletlist:
+        for a in astlist:
+            distance = math.hypot(b.x - a.x, b.y - a.y)
+            if distance<=50:
+                print(distance)
+                astlist.remove(a)
+                bulletlist.remove(b)
+                score+=1
+
+
+
     #bullet essentials
     for i in bulletlist:
-        bulletshot.move()
+        i.move()
+
+
     for event in pygame.event.get():
         if event.type==pygame.QUIT:
             exit()
-        if event.type==pygame.KEYDOWN:
-            if keys[pygame.K_SPACE]:
-                bulletshot=bullet()
-                bulletlist.append(bulletshot)
     keys=pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
         playert.left()
@@ -156,6 +182,10 @@ while True:
         playert.right()
     if keys[pygame.K_UP]:
         playert.forward()
+    if keys[pygame.K_SPACE] and currenttime%20 == 1:
+            bulletshot=bullet()
+            bulletlist.append(bulletshot)
 
-
+    
+         
     pygame.display.update()
